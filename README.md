@@ -5,7 +5,7 @@ Creación de un DEMO para realizar un EDA y forcast de un archivo CSV
 Python 3.10.11
 
 ## Dependencias:
-pip install streamlit
-pip install seaborn
-pip install plotly
-pip install statsforecast
+- pip install streamlit
+- pip install seaborn
+- pip install plotly
+- pip install statsforecast
