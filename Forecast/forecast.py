@@ -88,46 +88,40 @@ def plot_forecast(db, pred):
     st.plotly_chart(fig,use_container_width=True)
 
 #   -----------------------------------------------------------------------
-logo_path = "C:\\Users\\Celula1\\.streamlit\\img\\logo_small.png"
-icon = "C:\\Users\\Celula1\\.streamlit\\img\\icon.png"
+logo_path = "C:/Users/Celula1/app/static/logo_small.png"
+icon = "C:/Users/Celula1/app/static/icon.png"
 
-#st.header('DEMO Forecast')
-#st.markdown('---')
-#st.markdown("""
-#    <div style='background-color: #f0f2f5; padding: 10px; border-radius: 5px;'>
-#        <h2 style='color: #333;'>Este es un contenido dentro de un div simulado</h2>
-#        <p>Aquí puedes agregar cualquier información.</p>
-#    </div>
-#""", unsafe_allow_html=True)
+with open('style.css') as f:
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-st.title('Archivo para pronósticos')
-with st.expander('Cargar datos',expanded=True):
-    _dataset = st.checkbox("Dataset precargado", False, disabled=True)
-    if(_dataset):
-        st.selectbox("Selecciona el dataset",options=[1,2,3])
-    else:
-        _file = st.file_uploader("Carga un archivo CSV", type="csv")
-        if _file is not None:
-            df = read_file(_file)
-            st.session_state['respaldo'] = df
-            if('datos' not in st.session_state):
-                st.session_state['datos'] = df
-        else:
-            df = pd.DataFrame()
-del df
+
+st.header('Pasos para generar un pronóstico de series de tiempo')
+st.image("C:\\Users\\Celula1\\app\\static\\dg_time_series2.png", caption='En la imágen vemos los pasos que se deberían seguir para generar un pronóstico de series de tiempo, para este DEMO se omiten algunos.')
+
+st.header('Archivos ejemplo para pronósticos')
+_dataset1 = st.checkbox("Pasajeros de aerolinea", False)
+_dataset2 = st.checkbox("Producción de electricidad", False)
+_dataset3 = st.checkbox("Ventas", False, disabled=True)
+
+if(_dataset1):
+    st.session_state['respaldo'] = read_file('C:/Users/Celula1/app/Forecast/airline_passengers.csv')
+    st.session_state['respaldo']['MONTH'] = pd.to_datetime(st.session_state['respaldo']['MONTH'])
+    st.session_state['datos'] = st.session_state['respaldo']
+    st.write(st.session_state['respaldo'])
+if(_dataset2):
+    st.session_state['respaldo'] = read_file('C:/Users/Celula1/app/Forecast/ETTh1.csv')
+    st.session_state['datos'] = st.session_state['respaldo']
+    st.write(st.session_state['datos'])
+if(_dataset3):
+    st.session_state['respaldo'] = read_file('C:/Users/Celula1/app/Forecast/airline_passengers.csv')
+    st.session_state['datos'] = st.session_state['respaldo']
+    st.write(st.session_state['datos'])
+    
 gc.collect()
                  
 #   -----------------------------------------------------------------------
 #   FORECAST
-if _file is not None:
-    #_desc_serie = st.checkbox("Descomponer Serie", False)
-    #_see = st.checkbox("Visualizar Serie", False)
-    #_imputar = st.checkbox("Imputar", False)
-    #_outliers = st.checkbox("Outliers", False)
-    #_transformar = st.checkbox("Transformar", False)
-    #_vc = st.checkbox("Validación cruzada", False)
-    #_pred = st.checkbox("Predecir", False)
-    
+if 'datos' in st.session_state:
     col1, col2, col3 = st.columns([1,1,1])
     x_values, y_values = None, None
     with col1:
@@ -142,44 +136,69 @@ if _file is not None:
         df_forecast = st.session_state['forecast']
         df_forecast = df_forecast[[x,y,z]]
         df_forecast.columns = ['unique_id','ds','y']
-        st.write(df_forecast)
         
+        #   -----------------------------------------------------------------------------------------------
         fig = px.line(df_forecast, x = 'ds', y = 'y', title="Serie de tiempo", height=350)
         fig.update_traces(line={'width': .8, 'color': '#657695'})
         fig.update_xaxes(tickangle=90, dtick="M1")
         fig.update_layout(plot_bgcolor='#ebeff6')
         st.plotly_chart(fig,use_container_width=True)    
-        if('forecast' in st.session_state):
-            stl = STL(df_forecast['y'], len(df_forecast['y']))
-            result = stl.fit()
-            plot_components(result)
         
-            o = identify_outliers(df_forecast, 'zscore')
-            #o = identify_outliers(df_forecast, 'iqr')
-            st.write(o)
+        #   -----------------------------------------------------------------------------------------------
+        stl = STL(df_forecast['y'], len(df_forecast['y']))
+        result = stl.fit()
+        plot_components(result)
+    
+        #   -----------------------------------------------------------------------------------------------
+        o = identify_outliers(df_forecast, 'zscore')
+        #o = identify_outliers(df_forecast, 'iqr')
+        st.write(o)
 
-            # Create line plot for titration curve
-            fig = px.line(df_forecast, x="ds", y='y', labels={'ds': 'time(ds)', 'y': 'target(y)'},title= 'Outliers' ,height=350)
-            fig.update_traces(line={'width': .8, 'color': '#657695'})
-            fig.update_xaxes(tickangle=90, dtick="M1")
-            fig.update_layout(plot_bgcolor='#ebeff6')
-            # Add scatter plots for each set of equivalence points
-            for i in range(len(o)):
-                fig.add_trace(px.scatter(o.iloc[[i]], x="ds", y="y" , color_discrete_sequence=['red']).data[0])
-            
-            st.plotly_chart(fig,use_container_width=True)
-
-            #fig = px.line(o, x="ds", y='y', width=750, labels={'ds': 'time(ds)', 'y': 'target(y)'})
-            #st.plotly_chart(fig,use_container_width=True)
+        # Create line plot for titration curve
+        fig = px.line(df_forecast, x="ds", y='y', labels={'ds': 'time(ds)', 'y': 'target(y)'},title= 'Outliers' ,height=350)
+        fig.update_traces(line={'width': .8, 'color': '#657695'})
+        fig.update_xaxes(tickangle=90, dtick="M1")
+        fig.update_layout(plot_bgcolor='#ebeff6')
+        # Add scatter plots for each set of equivalence points
+        for i in range(len(o)):
+            fig.add_trace(px.scatter(o.iloc[[i]], x="ds", y="y" , color_discrete_sequence=['red']).data[0])
         
-            season_l = 52 # week
-            #models = [AutoARIMA(season_length=season_l), 
+        st.plotly_chart(fig,use_container_width=True)
+
+        #   -----------------------------------------------------------------------------------------------
+        #models = [AutoARIMA(season_length=season_l), 
             #          HoltWinters(season_length=season_l),
             #          AutoETS(season_length=season_l),
             #          AutoCES(season_length=season_l),
             #          AutoRegressive(lags=14)]
-            models = [AutoARIMA(season_length=season_l), HoltWinters(season_length=season_l)]
+        
+        tiempo = st.selectbox('Pronóstico por: ',['Día', 'Semana', 'Mes'], index=None)
+        if(tiempo == 'Día'):
+            season_l = 365
+            models = [HoltWinters(season_length=season_l)]
+            sf = StatsForecast(models=models , freq='D', n_jobs = -1)
+            p = forecast(df_forecast, sf, 4)
+            st.write(p)
+            plot_forecast(df_forecast,p)
+        if(tiempo == 'Semana'):
+            season_l = 52
+            models = [HoltWinters(season_length=season_l)]
             sf = StatsForecast(models=models , freq='W', n_jobs = -1)
             p = forecast(df_forecast, sf, 4)
             st.write(p)
             plot_forecast(df_forecast,p)
+        if(tiempo == 'Mes'):
+            season_l = 12
+            models = [HoltWinters(season_length=season_l)]
+            sf = StatsForecast(models=models , freq='M', n_jobs = -1)
+            p = forecast(df_forecast, sf, 4)
+            st.write(p)
+            plot_forecast(df_forecast,p)
+
+del df_forecast
+del st.session_state['forecast']
+del st.session_state['datos']
+del st.session_state['respaldo']
+gc.collect()
+            
+            
