@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100&display=swap'); 
+
+html, body{
+    font-family: 'Roboto', sans-serif; 
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.stApp {
+    background-image: url("./app/static/bg3.avif");
+    background-size: cover;
+}
+.stApp > header {
+    background-color: transparent;
+}
+.stSidebar {
+    background-color: #1f3965;
+}
+div[data-testid="stSidebarNav"] ul[data-testid="stSidebarNavItems"] li div a[data-testid="stSidebarNavLink"] span {
+    color: white;
+    font-weight: bold;
+}
+
+div[data-testid="stSidebarContent"]{
+    background-image: url("./app/static/bg2.jpg");
+}
+
+div[data-testid="stImageContainer"]{
+    margin: 10px;
+}
+
+div[data-testid="stSidebarContent"] div[data-testid="stSidebarHeader"]{
+    background-color: rgba((0), 0, 0, .5);
+    margin-bottom: 20px;
+}
+
+h2{
+    text-align: center;
+    font-family: 'Roboto', sans-serif; 
+    color:#1f3965;
+}
+
+h3{
+    font-family: 'Roboto', sans-serif; 
+    color:#1f3965;
+}
+hr{
+    color: #E8AC13;
+    border: 5px solid;
+    display: inline-block;
+    width: 50%;
+    margin: auto;
+}
+
+div[data-testid="stSidebarContent"] div[data-testid="stSidebarHeader"] a[data-testid="stLogoLink"]{
+    display: block;
+    margin: auto;
+}
+
+div[data-testid="stSidebarContent"] div[data-testid="stSidebarHeader"] a[data-testid="stLogoLink"] img[data-testid="stLogo"]{
+    height: 8rem;
+}
+
+div[data-testid="stSidebarNav"] ul[data-testid="stSidebarNavItems"] li div a[data-testid="stSidebarNavLink"] span {
+    color: #FFFFFF;
+    font-weight: lighter;
+}
+
+div[data-testid="stSidebarNav"] ul[data-testid="stSidebarNavItems"] li div a[data-testid="stSidebarNavLink"]:hover span {
+    color: #E8AC13;
+    font-weight: bold;
+}
