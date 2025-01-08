@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 
-logo_path = "C:/Users/Celula1/app/static/logo_small.png"
-icon = "C:/Users/Celula1/app/static/icon.png"
+logo_path = "./app/static/logo_small.png"
+icon = "./app/static/icon.png"
 
 with st.sidebar:
     st.logo(image=logo_path, link='https://datlas.mx/', size='large', icon_image=logo_path)
@@ -12,7 +12,6 @@ with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 st.header('Transformando datos en decisiones inteligentes')
-#st.image("C:/Users/Celula1/app/static/home.jpg")
 st.video("https://youtu.be/_xOv22BBGi8?si=OiH8IlG8B0EqiB-H")
 
 im1 = "https://datlas-static.s3.amazonaws.com/static/img/sol_Mapas.jpg"
