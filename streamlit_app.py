@@ -5,8 +5,8 @@ warnings.filterwarnings("ignore")
 
 
 #   -----------------------------------------------------------------------
-logo_path = "C:/Users/Celula1/app/static/logo_small.png"
-icon = "C:/Users/Celula1/app/static/icon.png"
+logo_path = "./app/static/logo_small.png"
+icon = "./app/static/icon.png"
 
 
 with st.sidebar:
