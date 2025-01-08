@@ -88,15 +88,15 @@ def plot_forecast(db, pred):
     st.plotly_chart(fig,use_container_width=True)
 
 #   -----------------------------------------------------------------------
-logo_path = "C:/Users/Celula1/app/static/logo_small.png"
-icon = "C:/Users/Celula1/app/static/icon.png"
+logo_path = "./app/static/logo_small.png"
+icon = "./app/static/icon.png"
 
 with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 
 st.header('Pasos para generar un pronóstico de series de tiempo')
-st.image("C:\\Users\\Celula1\\app\\static\\dg_time_series2.png", caption='En la imágen vemos los pasos que se deberían seguir para generar un pronóstico de series de tiempo, para este DEMO se omiten algunos.')
+st.image("./app/static/dg_time_series2.png", caption='En la imágen vemos los pasos que se deberían seguir para generar un pronóstico de series de tiempo, para este DEMO se omiten algunos.')
 
 st.header('Archivos ejemplo para pronósticos')
 _dataset1 = st.checkbox("Pasajeros de aerolinea", False)
@@ -104,16 +104,16 @@ _dataset2 = st.checkbox("Producción de electricidad", False)
 _dataset3 = st.checkbox("Ventas", False, disabled=True)
 
 if(_dataset1):
-    st.session_state['respaldo'] = read_file('C:/Users/Celula1/app/Forecast/airline_passengers.csv')
+    st.session_state['respaldo'] = read_file('./app/Forecast/airline_passengers.csv')
     st.session_state['respaldo']['MONTH'] = pd.to_datetime(st.session_state['respaldo']['MONTH'])
     st.session_state['datos'] = st.session_state['respaldo']
     st.write(st.session_state['respaldo'])
 if(_dataset2):
-    st.session_state['respaldo'] = read_file('C:/Users/Celula1/app/Forecast/ETTh1.csv')
+    st.session_state['respaldo'] = read_file('./app/Forecast/ETTh1.csv')
     st.session_state['datos'] = st.session_state['respaldo']
     st.write(st.session_state['datos'])
 if(_dataset3):
-    st.session_state['respaldo'] = read_file('C:/Users/Celula1/app/Forecast/airline_passengers.csv')
+    st.session_state['respaldo'] = read_file('./app/Forecast/airline_passengers.csv')
     st.session_state['datos'] = st.session_state['respaldo']
     st.write(st.session_state['datos'])
     
