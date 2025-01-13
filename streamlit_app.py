@@ -5,8 +5,8 @@ warnings.filterwarnings("ignore")
 
 
 #   -----------------------------------------------------------------------
-logo_path = "./app/static/logo_small.png"
-icon = "./app/static/icon.png"
+logo_path = "static/logo_small.png"
+icon = "static/icon.png"
 
 
 with st.sidebar:

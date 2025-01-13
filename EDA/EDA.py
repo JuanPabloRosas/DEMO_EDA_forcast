@@ -79,8 +79,8 @@ def identify_outliers(db, m):
     return outliers
 
 #   -----------------------------------------------------------------------
-logo_path = "C:\\Users\\Celula1\\.streamlit\\img\\logo_small.png"
-icon = "C:\\Users\\Celula1\\.streamlit\\img\\icon.png"
+logo_path = "static/logo_small.png"
+icon = "static/icon.png"
 
 with st.sidebar:
     st.logo(image=logo_path, link='https://datlas.mx/', size='large', icon_image=logo_path)

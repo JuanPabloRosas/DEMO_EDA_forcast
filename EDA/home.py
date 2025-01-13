@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 
-logo_path = "./app/static/logo_small.png"
-icon = "./app/static/icon.png"
+logo_path = "static/logo_small.png"
+icon = "static/icon.png"
 
 with st.sidebar:
     st.logo(image=logo_path, link='https://datlas.mx/', size='large', icon_image=logo_path)
