@@ -3,8 +3,6 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
 import os
 os.environ['NIXTLA_ID_AS_COL'] = '1'
 pd.options.display.max_columns = None
@@ -16,6 +14,21 @@ import gc
 import warnings
 warnings.filterwarnings("ignore")
 
+#   LOCAL
+#logo_path = "C:/Users/Celula1/app/static/logo_small.png"
+#icon = "C:/Users/Celula1/app/static/icon.png"
+#img_eda = "C:\\Users\\Celula1\\app\\static\\EDA & Forecast_bl.png"
+
+#   PLOOMBER
+logo_path = "static/logo_small.png"
+icon = "static/icon.png"
+img_eda = "static/EDA & Forecast_bl.png"
+
+with st.sidebar:
+    st.logo(image=logo_path, link='https://datlas.mx/', size='large', icon_image=logo_path)
+
+with open('style.css') as f:
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 #   -----------------------------------------------------------------------
 def read_file(filename):
@@ -79,40 +92,55 @@ def identify_outliers(db, m):
     return outliers
 
 #   -----------------------------------------------------------------------
-logo_path = "static/logo_small.png"
-icon = "static/icon.png"
 
-with st.sidebar:
-    st.logo(image=logo_path, link='https://datlas.mx/', size='large', icon_image=logo_path)
+st.subheader('¿Qué es un EDA?')
+st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+st.markdown("""
+            Un :blue-background[**EDA (Exploratory Data Analysis, por sus siglas en inglés)**] es un enfoque para analizar conjuntos de datos con el fin de resumir sus principales características, 
+            a menudo con el uso de métodos gráficos y estadísticos. El objetivo del EDA es comprender la estructura, las relaciones y las posibles anomalías en los datos antes de aplicar modelos predictivos o realizar inferencias más complejas.
+            Algunas de las técnicas comunes en el EDA incluyen:
+            
+            > - **Estadísticas descriptivas**: Cálculo de medidas como la media, mediana, desviación estándar, percentiles, etc.
+            > - **Visualización de datos**: Usar gráficos como histogramas, diagramas de dispersión, diagramas de barras, etc., para identificar patrones, tendencias y posibles outliers.
+            > - **Detección de valores atípicos (outliers)**: Identificar puntos de datos que se alejan de manera significativa del resto del conjunto.
+            > - **Análisis de correlaciones**: Verificar las relaciones entre variables utilizando matrices de correlación o gráficos de dispersión.
+            
+            El EDA es crucial para comprender los datos y tomar decisiones informadas antes de aplicar modelos estadísticos o algoritmos de aprendizaje automático.
+            """)
 
-st.title('Análisis exploratorio de datos')
-with st.expander('Selecciona los datos a analizar', expanded=False):
-    _file = st.file_uploader("Carga un archivo separado por comas (.csv)", type="csv")
-    if _file is not None:
-        df = read_file(_file)
-        st.session_state['respaldo'] = df
-        if('datos' not in st.session_state):
-            st.session_state['datos'] = df
-    else:
-        df = pd.DataFrame()
+st.image(img_eda)
+
+st.write("Para usar el EDA es necesario cargar un archivo de datos tabular separado por comas y con encabezados, que sea :blue-background[**menor o igual a 200 Mb**].")
+
+st.header('Análisis exploratorio de datos')
+_file = st.file_uploader("Carga un archivo separado por comas (.csv)", type="csv")
+if _file is not None:
+    df = read_file(_file)
+    st.session_state['respaldo'] = df
+    st.session_state['datos'] = df
+else:
+    df = pd.DataFrame()
+
 del df
 gc.collect()
 #   -----------------------------------------------------------------------
 #   ESTADISTICA BASICA
 if _file is not None:    
-    st.divider()
     st.subheader('Visualización de Datos')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)    
     st.write(st.session_state['datos'])
-    st.divider()
+    
     st.subheader('Renglones y columnas')
-    st.write('El archivo tiene ' + str(st.session_state['datos'].shape[0]) + ' renglones y ' + str(st.session_state['datos'].shape[1]) +
-              ' columnas. Además, en la siguiente tabla podemos ver cuantos datos unicos hay por cada columna.')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+    st.write('El archivo tiene :blue-background[**' + str(st.session_state['datos'].shape[0]) + ' renglones y ' + str(st.session_state['datos'].shape[1]) +
+              ' columnas**]. Además, en la siguiente tabla podemos ver cuantos datos unicos hay por cada columna.')
     
     st.text(st.session_state['datos'].nunique())
     
-    st.divider()
+    
     st.subheader('Duplicados, ceros, negativos, Nan y tipos de dato')
-    st.write('En la siguiente tabla se muestra la cantidad de datos duplicados o negativos por columna, así como la cantidad de ceros o datos faltantes (Nan) y el tipo de dato')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)    
+    st.write('En la siguiente tabla se muestra la cantidad de :blue-background[**datos duplicados o negativos por columna**], así como la cantidad de :blue-background[**ceros o datos faltantes (Nan) y el tipo de dato**]')
     nan_ = c_nan(st.session_state['datos'])
     cero_=  c_cero(st.session_state['datos'])
     neg_=  c_negative(st.session_state['datos'])
@@ -123,61 +151,71 @@ if _file is not None:
     ac.style.format_index(str.upper, axis = 1)
     st.write(dup_.merge(ac,right_on=ac.index, left_on='Columna', how='right'))
     
-    st.divider()
     st.subheader('Estadística básica')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)    
     st.write(st.session_state['datos'].describe())
-
-    st.divider()
-    st.subheader('Grafico de barras')
+#   ----------------------------------------------------------------------------------------------
+    st.subheader('Gráfica de barras')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)    
     st.write('Selecciona los valores para el eje horizontal y para el eje vertical. La característica que elijas para el eje vertical se va a agrupar y sumar, y se van a mostrar mediante un grafico de barras.')
     col1, col2 = st.columns([1,1])
     with col1:
-        x_bar = st.selectbox('Eje horizontal bar plot: ',st.session_state['datos'].columns, index=None)
+        x_bar = st.selectbox('Eje horizontal bar plot: ',st.session_state['datos'].columns, index=None, placeholder='Selecciona una opción')
+        y_bar = st.selectbox('Eje vertical bar plot: ',st.session_state['datos'].columns, index=None, placeholder='Selecciona una opción')
     with col2:
-        y_bar = st.selectbox('Eje vertical bar plot: ',st.session_state['datos'].columns, index=None)
+        operation_bar = st.radio('Operación de agrupamiento', ['Sumar', 'Contar'], key='radio_bar')
     if((x_bar is not None) & (y_bar is not None)):
-        df_temp = st.session_state['datos'].groupby([x_bar], as_index=False).sum()
-        fig = px.bar(df_temp, x=x_bar, y=y_bar)
-        st.plotly_chart(fig,use_container_width=True)
-    
-    st.divider()
-    st.subheader('Line plot')
+        if(operation_bar == 'Sumar'):
+            df_temp = st.session_state['datos'].groupby([x_bar], as_index=False).sum()
+        else:
+            df_temp = st.session_state['datos'].groupby([x_bar], as_index=False).count()
+        
+        try:
+            fig = px.bar(df_temp, x=x_bar, y=y_bar)
+            st.plotly_chart(fig,use_container_width=True)
+        except:
+            st.error('Elige una columna que se pueda sumar para el eje vertical o elige contar como operación de agrupamiento...')
+#   ----------------------------------------------------------------------------------------------
+    st.subheader('Gráfica de lineas')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)    
     st.write('Selecciona los valores para el eje horizontal y para el eje vertical. La característica que elijas para el eje vertical se va a agrupar y sumar, y se van a mostrar mediante un grafico de lineas.')
     col1, col2 = st.columns([1,1])
     with col1:
-        x_line = st.selectbox('Eje horizontal line plot: ',st.session_state['datos'].columns, index=None)
+        x_line = st.selectbox('Eje horizontal line plot: ',st.session_state['datos'].columns, index=None, placeholder='Selecciona una opción')
+        y_line = st.selectbox('Eje vertical line plot: ',st.session_state['datos'].columns, index=None, placeholder='Selecciona una opción')
     with col2:
-        y_line = st.selectbox('Eje vertical line plot: ',st.session_state['datos'].columns, index=None)
+        operation_line = st.radio('Operación de agrupamiento', ['Sumar', 'Contar'], key='radio_line')
     if((x_line is not None) & (y_line is not None)):
         df_temp = st.session_state['datos'].groupby([x_line], as_index=False).sum()
         fig = px.line(df_temp, x=x_line, y=y_line, title="Test line plot")
         st.plotly_chart(fig,use_container_width=True)
-
-    st.divider()
-    st.subheader('Correlación')
+#   ----------------------------------------------------------------------------------------------
+    st.subheader('Gráfica de Correlación')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
     st.write('El grafico de correlación te puede ayudar a visualizar si existe una relación positiva (Un número entre cero y uno) o una relación negativa (Un número entre menos uno y cero).' +
              ' Si la relación es positiva indica que si una de las características aumenta su valor, la otra también. Si la relación e snegativa indica lo contrario.')
     fig = px.imshow(round(st.session_state['datos'].select_dtypes(exclude='object').corr(),3), text_auto=True, aspect='auto')
     st.plotly_chart(fig,use_container_width=True)
-    
-    st.divider()
+#   ----------------------------------------------------------------------------------------------
     st.subheader('Histograma')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
     y_hist = st.selectbox('Histograma: ',st.session_state['datos'].columns, index= 0)
     hist_fig = px.histogram(st.session_state['datos'], x=y_hist)
     st.plotly_chart(hist_fig,use_container_width=True)
-
-    st.divider()
-    st.subheader('Scatter plot')
+#   ----------------------------------------------------------------------------------------------
+    st.subheader('Gráfia de disperción')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
     col1, col2 = st.columns([1,1])
     with col1:
-        x = st.selectbox('Eje horizontal scatter plot: ',st.session_state['datos'].columns, index=None)
+        x = st.selectbox('Eje horizontal scatter plot: ',st.session_state['datos'].columns, index=None, placeholder='Selecciona una opción')
+        y = st.selectbox('Eje vertical scatter plot: ',st.session_state['datos'].columns, index=None, placeholder='Selecciona una opción')
     with col2:
-        y = st.selectbox('Eje vertical scatter plot: ',st.session_state['datos'].columns, index=None)
+        operation_scatter = st.radio('Operación de agrupamiento', ['Sumar', 'Contar'], key='radio_scatter')
     if((x is not None) & (y is not None)):
         df_temp = st.session_state['datos'].groupby([x], as_index=False).sum()
         fig = px.scatter(df_temp, x=x, y=y, title="Test scatter plot")
         st.plotly_chart(fig,use_container_width=True)
-    
+#   ----------------------------------------------------------------------------------------------
     del nan_
     del cero_
     del neg_

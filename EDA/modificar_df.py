@@ -16,6 +16,7 @@ import gc
 import warnings
 warnings.filterwarnings("ignore")
 
+image = "./app/static/bg3.avif"
 
 #   -----------------------------------------------------------------------
 def read_file(filename):

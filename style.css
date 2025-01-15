@@ -7,7 +7,7 @@ html, body{
 }
 
 .stApp {
-    background-image: url("./app/static/bg3.avif");
+    background-image: url("app/static/bg3.avif");
     background-size: cover;
 }
 .stApp > header {
@@ -17,12 +17,13 @@ html, body{
     background-color: #1f3965;
 }
 div[data-testid="stSidebarNav"] ul[data-testid="stSidebarNavItems"] li div a[data-testid="stSidebarNavLink"] span {
-    color: white;
+    color: #1f3965;
     font-weight: bold;
 }
 
 div[data-testid="stSidebarContent"]{
-    background-image: url("./app/static/bg2.jpg");
+    /*background-image: url("./app/static/bg2.jpg");*/
+    background-color: #ffffff;
 }
 
 div[data-testid="stImageContainer"]{
@@ -62,7 +63,7 @@ div[data-testid="stSidebarContent"] div[data-testid="stSidebarHeader"] a[data-te
 }
 
 div[data-testid="stSidebarNav"] ul[data-testid="stSidebarNavItems"] li div a[data-testid="stSidebarNavLink"] span {
-    color: #FFFFFF;
+    color: #1f3965;
     font-weight: lighter;
 }
 

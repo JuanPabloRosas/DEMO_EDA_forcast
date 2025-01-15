@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd
+import pandas as pd 
 import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
@@ -35,21 +35,22 @@ def read_file(filename):
 
 def plot_components(result):
     df = pd.concat([result.observed, result.trend, result.seasonal, result.resid], axis=1)
-    df = df.rename(columns={0:'Original Data', 'season':'seasonal','observed':'Original Data'})
+    df = df.rename(columns={0:'serie temporal','season':'Estacionalidad','trend':'Tendencia', 'resid':'Residuos'})
     components = df.columns
     rows = len(components)
     fig = make_subplots(rows=rows, cols=1, shared_xaxes=True, subplot_titles = [i for i in components])
   
     # Plot original data
     for i, col in enumerate(components):
-        fig.add_trace(go.Scatter(x=df.index, y=df[col], mode='lines', name=col), row=i+1, col=1)
+        if(i == 1):
+            fig.add_trace(go.Scatter(x=df.index, y=round(df[col],4), mode='lines', name=col), row=i+1, col=1)
+        else:
+            fig.add_trace(go.Scatter(x=df.index, y=df[col], mode='lines', name=col), row=i+1, col=1)
 
     # Update layout
     fig.update_layout(
-        title='Time Series Decomposition',
-        xaxis_title='Time',
-        height=1200,
-        width=1200
+        height=700,
+    #    width=1200
     )
     st.plotly_chart(fig,use_container_width=True)
 
@@ -69,50 +70,79 @@ def identify_outliers(db, m):
         outliers = db[((db['y'] < Q1[0] - threshold * IQR[0]) | (db['y'] > Q3[0]- threshold * IQR[0]))]
     return outliers
 
-def forecast(db_forecast, sf, horiz):
-    db_forecast.set_index(db_forecast['ds'], inplace=True)
-    db_forecast = db_forecast.asfreq('W')
-    db_forecast.interpolate(method='bfill', inplace=True)
-    pred = sf.forecast(df= db_forecast, h= horiz) 
-    return pred
-
 def plot_forecast(db, pred):
-    fig = px.line(db, x="ds", y='y', labels={'ds': 'time(ds)', 'y': 'target(y)'},title= 'Forecast' ,height=350)
-    fig.update_traces(line={'width': .8, 'color': '#657695'})
+    fig = px.line(db, x="ds", y='y', labels={'ds': 'time(ds)', 'y': 'target(y)'},height=350)
+    fig.update_traces(line={'width': .8, 'color': '#000000'})
     fig.update_xaxes(tickangle=90, dtick="M1")
     fig.update_layout(plot_bgcolor='#ebeff6')
     # Add scatter plots for each set of equivalence points
-    for i in range(len(pred)):
-        fig.add_trace(px.scatter(pred.iloc[[i]], x="ds", y="AutoARIMA" , color_discrete_sequence=['red']).data[0])
-        fig.add_trace(px.scatter(pred.iloc[[i]], x="ds", y="HoltWinters" , color_discrete_sequence=['yellow']).data[0])
+    #for i in range(len(pred)):
+        #fig.add_trace(px.line(pred.iloc[[i]], x="ds", y="AutoARIMA" , color_discrete_sequence=['red'], labels = 'AutoARIMA').data[0])
+        #fig.add_trace(px.line(pred.iloc[[i]], x="ds", y="HoltWinters" , color_discrete_sequence=['yellow'], labels = 'AutoARIMA2').data[0])
+        #fig.add_trace(px.line(pred.iloc[[i]], x="ds", y="AutoETS" , color_discrete_sequence=['blue'], labels = 'AutoARIMA3').data[0])
+        #fig.add_trace(px.line(pred.iloc[[i]], x="ds", y="CES" , color_discrete_sequence=['green'], labels = 'AutoARIMA4').data[0])
+        #fig.add_trace(px.line(pred.iloc[[i]], x="ds", y="AutoRegressive" , color_discrete_sequence=['black'],labels = 'AutoARIMA5').data[0])
+
+    fig.add_trace(px.line(pred, x="ds", y="AutoARIMA" , color_discrete_sequence=['#f57c74'], width=11).data[0])
+    fig.add_trace(px.line(pred, x="ds", y="HoltWinters" , color_discrete_sequence=['#f5de74']).data[0])
+    fig.add_trace(px.line(pred, x="ds", y="AutoETS" , color_discrete_sequence=['#748bf5']).data[0])
+    fig.add_trace(px.line(pred, x="ds", y="CES" , color_discrete_sequence=['#6ccc66']).data[0])
+    fig.add_trace(px.line(pred, x="ds", y="AutoRegressive" , color_discrete_sequence=['gray']).data[0])
+    
+    def selector(column_name):
+        # just need to be careful that "column_name" is not any other string in "hovertemplate" data
+        f = lambda x: True if column_name in x['hovertemplate'] else False
+        return f
+    
+    fig.update_traces(patch={"line": {"dash": "dot"}}, selector=selector("AutoARIMA"))
+    fig.update_traces(patch={"line": {"dash": "dot"}}, selector=selector("AutoETS"))
+    fig.update_traces(patch={"line": {"dash": "dot"}}, selector=selector("HoltWinters"))
+    fig.update_traces(patch={"line": {"dash": "dot"}}, selector=selector("CES"))
+    fig.update_traces(patch={"line": {"dash": "dot"}}, selector=selector("AutoRegressive"))
     st.plotly_chart(fig,use_container_width=True)
 
 #   -----------------------------------------------------------------------
+#   LOCAL
+#logo_path = "C:/Users/Celula1/app/static/logo_small.png"
+#icon = "C:/Users/Celula1/app/static/icon.png"
+#img_forecast = "C:\\Users\\Celula1\\app\\static\\dg_time_series2.png"
+
+#   PLOOMBER
 logo_path = "static/logo_small.png"
 icon = "static/icon.png"
+img_forecast = "static/dg_time_series2.png"
+
+
+with st.sidebar:
+    st.logo(image=logo_path, link='https://datlas.mx/', size='large', icon_image=logo_path)
 
 with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 
 st.header('Pasos para generar un pronóstico de series de tiempo')
-st.image("static/dg_time_series2.png", caption='En la imágen vemos los pasos que se deberían seguir para generar un pronóstico de series de tiempo, para este DEMO se omiten algunos.')
+st.image(img_forecast, caption='En la imágen vemos los pasos que se deberían seguir para generar un pronóstico de series de tiempo, para este DEMO se omiten algunos.')
 
 st.header('Archivos ejemplo para pronósticos')
 _dataset1 = st.checkbox("Pasajeros de aerolinea", False)
-_dataset2 = st.checkbox("Producción de electricidad", False)
+_dataset2 = st.checkbox("Producción de electricidad", False, disabled=True)
 _dataset3 = st.checkbox("Ventas", False, disabled=True)
 
 if(_dataset1):
+    #st.session_state['respaldo'] = read_file('C:/Users/Celula1/app/Forecast/airline_passengers.csv')
     st.session_state['respaldo'] = read_file('Forecast/airline_passengers.csv')
     st.session_state['respaldo']['MONTH'] = pd.to_datetime(st.session_state['respaldo']['MONTH'])
     st.session_state['datos'] = st.session_state['respaldo']
+    st.subheader('Visualización de datos')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
     st.write(st.session_state['respaldo'])
 if(_dataset2):
+    #st.session_state['respaldo'] = read_file('C:/Users/Celula1/app/Forecast/ETTh1.csv')
     st.session_state['respaldo'] = read_file('Forecast/ETTh1.csv')
     st.session_state['datos'] = st.session_state['respaldo']
     st.write(st.session_state['datos'])
 if(_dataset3):
+    #st.session_state['respaldo'] = read_file('C:/Users/Celula1/app/Forecast/airline_passengers.csv')
     st.session_state['respaldo'] = read_file('Forecast/airline_passengers.csv')
     st.session_state['datos'] = st.session_state['respaldo']
     st.write(st.session_state['datos'])
@@ -122,83 +152,78 @@ gc.collect()
 #   -----------------------------------------------------------------------
 #   FORECAST
 if 'datos' in st.session_state:
-    col1, col2, col3 = st.columns([1,1,1])
-    x_values, y_values = None, None
-    with col1:
-        x = st.selectbox('Columna de ID: ',st.session_state['datos'].columns, index=None)
-    with col2:
-        y = st.selectbox('Columna de tiempo: ',st.session_state['datos'].columns, index=None)
-    with col3:
-        z = st.selectbox('Columna de variable a pronosticar: ',st.session_state['datos'].columns, index=None)
+    df_forecast = st.session_state['respaldo']
+    df_forecast.columns = ['unique_id','ds','y']
     
-    if((x is not None) & (y is not None) & (z is not None)):
-        st.session_state['forecast'] = st.session_state['datos'].groupby([x,y], as_index = False)[x,y,z].sum()
-        df_forecast = st.session_state['forecast']
-        df_forecast = df_forecast[[x,y,z]]
-        df_forecast.columns = ['unique_id','ds','y']
-        
-        #   -----------------------------------------------------------------------------------------------
-        fig = px.line(df_forecast, x = 'ds', y = 'y', title="Serie de tiempo", height=350)
-        fig.update_traces(line={'width': .8, 'color': '#657695'})
-        fig.update_xaxes(tickangle=90, dtick="M1")
-        fig.update_layout(plot_bgcolor='#ebeff6')
-        st.plotly_chart(fig,use_container_width=True)    
-        
-        #   -----------------------------------------------------------------------------------------------
-        stl = STL(df_forecast['y'], len(df_forecast['y']))
-        result = stl.fit()
-        plot_components(result)
+    #   -----------------------------------------------------------------------------------------------
+    #st.subheader('Serie de tiempo')
+    #st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+    #fig = px.line(df_forecast, x = 'ds', y = 'y', height=350)
+    #fig.update_traces(line={'width': .8, 'color': '#657695'})
+    #fig.update_xaxes(tickangle=90, dtick="M1")
+    #fig.update_layout(plot_bgcolor='#ebeff6')
+    #st.plotly_chart(fig,use_container_width=True)    
     
-        #   -----------------------------------------------------------------------------------------------
-        o = identify_outliers(df_forecast, 'zscore')
-        #o = identify_outliers(df_forecast, 'iqr')
-        st.write(o)
+    #   -----------------------------------------------------------------------------------------------
+    stl = STL(df_forecast['y'], len(df_forecast['y']))
+    result = stl.fit()
+    st.subheader('Descomposición de la serie')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+    plot_components(result)
 
-        # Create line plot for titration curve
-        fig = px.line(df_forecast, x="ds", y='y', labels={'ds': 'time(ds)', 'y': 'target(y)'},title= 'Outliers' ,height=350)
-        fig.update_traces(line={'width': .8, 'color': '#657695'})
-        fig.update_xaxes(tickangle=90, dtick="M1")
-        fig.update_layout(plot_bgcolor='#ebeff6')
-        # Add scatter plots for each set of equivalence points
-        for i in range(len(o)):
-            fig.add_trace(px.scatter(o.iloc[[i]], x="ds", y="y" , color_discrete_sequence=['red']).data[0])
-        
-        st.plotly_chart(fig,use_container_width=True)
+    #   -----------------------------------------------------------------------------------------------
+    st.subheader('Valores atípicos')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+    o = identify_outliers(df_forecast, 'zscore')
+    #o = identify_outliers(df_forecast, 'iqr')
+    st.write(o)
 
-        #   -----------------------------------------------------------------------------------------------
-        #models = [AutoARIMA(season_length=season_l), 
-            #          HoltWinters(season_length=season_l),
-            #          AutoETS(season_length=season_l),
-            #          AutoCES(season_length=season_l),
-            #          AutoRegressive(lags=14)]
-        
-        tiempo = st.selectbox('Pronóstico por: ',['Día', 'Semana', 'Mes'], index=None)
-        if(tiempo == 'Día'):
-            season_l = 365
-            models = [HoltWinters(season_length=season_l)]
-            sf = StatsForecast(models=models , freq='D', n_jobs = -1)
-            p = forecast(df_forecast, sf, 4)
-            st.write(p)
-            plot_forecast(df_forecast,p)
-        if(tiempo == 'Semana'):
-            season_l = 52
-            models = [HoltWinters(season_length=season_l)]
-            sf = StatsForecast(models=models , freq='W', n_jobs = -1)
-            p = forecast(df_forecast, sf, 4)
-            st.write(p)
-            plot_forecast(df_forecast,p)
-        if(tiempo == 'Mes'):
-            season_l = 12
-            models = [HoltWinters(season_length=season_l)]
-            sf = StatsForecast(models=models , freq='M', n_jobs = -1)
-            p = forecast(df_forecast, sf, 4)
-            st.write(p)
-            plot_forecast(df_forecast,p)
+    # Create line plot for titration curve
+    fig = px.line(df_forecast, x="ds", y='y', labels={'ds': 'time(ds)', 'y': 'target(y)'},height=350)
+    fig.update_traces(line={'width': .8, 'color': '#657695'})
+    fig.update_xaxes(tickangle=90, dtick="M1")
+    fig.update_layout(plot_bgcolor='#ebeff6')
+    # Add scatter plots for each set of equivalence points
+    for i in range(len(o)):
+        fig.add_trace(px.scatter(o.iloc[[i]], x="ds", y="y" , color_discrete_sequence=['red']).data[0])
+    
+    st.plotly_chart(fig,use_container_width=True)
 
-del df_forecast
-del st.session_state['forecast']
-del st.session_state['datos']
-del st.session_state['respaldo']
-gc.collect()
-            
-            
+    #   -----------------------------------------------------------------------------------------------
+    
+    if(_dataset2):  #   ELECTRICIDAD
+        season_l = 365 
+        models = [HoltWinters(season_length=season_l)]
+        sf = StatsForecast(models=models , freq='D', n_jobs = -1)
+        p = sf.forecast(df= df_forecast, h= 4, fitted=True)
+        st.write(p)
+        plot_forecast(df_forecast,p)
+    if(_dataset3):  #   VENTAS
+        season_l = 52
+        models = [HoltWinters(season_length=season_l)]
+        sf = StatsForecast(models=models , freq='W', n_jobs = -1)
+        p = sf.forecast(df= df_forecast, h= 4, fitted=True)
+        st.write(p)
+        plot_forecast(df_forecast,p)
+    if(_dataset1):  #   AEROLINEA
+        season_l = 12
+        #models = [HoltWinters(season_length=season_l)]
+        models = [AutoARIMA(season_length=season_l), 
+                  HoltWinters(season_length=season_l),
+                  AutoETS(season_length=season_l),
+                  AutoCES(season_length=season_l),
+                  AutoRegressive(lags=14)]
+    
+        st.subheader('Pronóstico')
+        st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+        sf = StatsForecast(models=models , freq='M', n_jobs = -1)
+        p = sf.forecast(df= df_forecast[:-4], h= 4, fitted=True)
+        p['y'] = list(df_forecast.tail(4)['y'])
+        st.write(p)
+        plot_forecast(df_forecast,p)
+
+    del df_forecast
+    del st.session_state['datos']
+    del st.session_state['respaldo']
+    gc.collect()
+
