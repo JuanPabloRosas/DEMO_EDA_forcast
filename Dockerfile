@@ -1,32 +1,26 @@
-FROM debian:bookworm-slim
+FROM python:3.10-slim
 
-# Install necessary tools
-RUN apt-get update && \
-    apt-get install -y curl bzip2 \
-    && rm -rf /var/lib/apt/lists/*
+# Install essential system dependencies
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    git build-essential cmake curl unixodbc unixodbc-dev gunicorn && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install micromamba (arm)
-# RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-aarch64/latest | tar -xvj bin/micromamba
-# amd
-RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
+# Set timezone
+ENV TZ=America/Monterrey
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-RUN mv bin/micromamba /usr/local/bin/
+# Upgrade pip and install Python dependencies
+COPY ./requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r /tmp/requirements.txt && \
+    rm -f /tmp/requirements.txt
 
+# Copy application files
+COPY ./ /app
 WORKDIR /app
-ENV MAMBA_ROOT_PREFIX /root/micromamba
 
-# create environment
-COPY environment.yml /app/environment.yml
-RUN micromamba create -n env -f environment.yml -y
+# Expose Streamlit's default port
+EXPOSE 8501
 
-# ensure the environment is activated
-RUN echo 'eval "$(micromamba shell hook --shell bash)"' >> /app/bash-profile && \
-    echo 'micromamba activate env' >> /app/bash-profile
-RUN cat /app/bash-profile >> /etc/bash.bashrc
-RUN cat /app/bash-profile >> /root/.bashrc
-
-ENV PATH /root/micromamba/envs/env/bin:$PATH
-
-COPY . /app
-
-ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=80", "--server.headless=true", "--server.address=0.0.0.0", "--browser.gatherUsageStats=false", "--server.enableStaticServing=true", "--server.fileWatcherType=none", "--client.toolbarMode=viewer"]
+# Define entrypoint for Streamlit app
+ENTRYPOINT ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0", "--logger.level=info"]
