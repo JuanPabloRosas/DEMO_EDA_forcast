@@ -22,12 +22,12 @@ with open('style.css') as f:
 st.image(img_header)
 #st.image("/srv/static/EDA & Forecast_bl.png")
 
-video_file = open(video_eda, "rb")
-video_bytes = video_file.read()
+#video_file = open(video_eda, "rb")
+#video_bytes = video_file.read()
 
-st.video(video_bytes, autoplay=True)
+#st.video(video_bytes, autoplay=True)
 
-#st.video("https://youtu.be/_xOv22BBGi8?si=OiH8IlG8B0EqiB-H", start_time=1)
+st.video("https://vimeo.com/1047182043", start_time=1)
 
 im1 = "https://blogdatlas.wordpress.com/wp-content/uploads/2024/10/image-3.png?w=900"
 im2 = "https://blogdatlas.wordpress.com/wp-content/uploads/2024/06/banner-1.png?w=900"
