@@ -15,14 +15,14 @@ import warnings
 warnings.filterwarnings("ignore")
 
 #   LOCAL
-#logo_path = "C:/Users/Celula1/app/static/logo_small.png"
-#icon = "C:/Users/Celula1/app/static/icon.png"
-#img_eda = "C:\\Users\\Celula1\\app\\static\\EDA & Forecast_bl.png"
+logo_path = "C:/Users/Celula1/app/static/logo_small.png"
+icon = "C:/Users/Celula1/app/static/icon.png"
+img_eda = "C:\\Users\\Celula1\\app\\static\\EDA & Forecast_bl.png"
 
 #   PLOOMBER
-logo_path = "static/logo_small.png"
-icon = "static/icon.png"
-img_eda = "static/EDA & Forecast_bl.png"
+#logo_path = "static/logo_small.png"
+#icon = "static/icon.png"
+#img_eda = "static/EDA & Forecast_bl.png"
 
 with st.sidebar:
     st.logo(image=logo_path, link='https://datlas.mx/', size='large', icon_image=logo_path)
@@ -91,6 +91,28 @@ def identify_outliers(db, m):
         outliers = db[((db['y'] < Q1[0] - threshold * IQR[0]) | (db['y'] > Q3[0]- threshold * IQR[0]))]
     return outliers
 
+def rfm(df):
+    df.columns = ['fecha','cliente','cantidad','precio','producto']
+    df_grouped = df.groupby(['fecha','producto','cliente'], as_index=False).sum()
+    clientes = list(df_grouped['cliente'].unique())
+    df_rfm = pd.DataFrame()
+    list_ac = list()
+    for cliente in clientes:
+        #   cliente = 'Technics Stores Inc.'
+        #   Compra mas reciente
+        r = pd.to_datetime(df_grouped[df_grouped['cliente'] == cliente]['fecha']).max()
+
+        #   Cuantas veces ha comprado
+        f = len(pd.to_datetime(df_grouped[df_grouped['cliente'] == cliente]['fecha']))
+        
+        #   Cuanto ha gastado
+        temp = df_grouped[df_grouped['cliente'] == cliente]
+        temp['total'] = temp['cantidad'] * temp['precio']
+        m = temp['total'].mean()
+        list_ac.append([cliente,r,f,m])
+    df_rfm = pd.DataFrame(list_ac)
+    df_rfm.columns = ['cliente','R','F','M']
+    return df_rfm
 #   -----------------------------------------------------------------------
 
 st.subheader('¿Qué es un EDA?')
@@ -215,7 +237,27 @@ if _file is not None:
         df_temp = st.session_state['datos'].groupby([x], as_index=False).sum()
         fig = px.scatter(df_temp, x=x, y=y, title="Test scatter plot")
         st.plotly_chart(fig,use_container_width=True)
-#   ----------------------------------------------------------------------------------------------
+    #   ----------------------------------------------------------------------------------------------
+    st.subheader('Análisis RFM')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+    col1, col2 = st.columns([1,1])
+    with col1:
+        fechas_compra = st.selectbox('Fechas de compra: ',st.session_state['datos'].columns, index=None)
+        clientes = st.selectbox('Clientes: ',st.session_state['datos'].columns, index=None)
+    with col2:
+        cantidad = st.selectbox('Cantidad de compra: ',st.session_state['datos'].columns, index=None)
+        costo = st.selectbox('Costos de compra: ',st.session_state['datos'].columns, index=None)
+        producto = st.selectbox('Productos: ',st.session_state['datos'].columns, index=None)
+    
+    if((fechas_compra is not None) & (clientes is not None) & (cantidad is not None) & (costo is not None) & (producto is not None)):
+        _rfm = rfm(st.session_state['datos'][[fechas_compra,clientes,cantidad,costo,producto]])
+        st.write(_rfm)
+    #   ----------------------------------------------------------------------------------------------
+
+    # st.subheader('Mapa')
+    # st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+    #   ----------------------------------------------------------------------------------------------
+
     del nan_
     del cero_
     del neg_

@@ -1,16 +1,19 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 #   LOCAL
-#logo_path = "C:/Users/Celula1/app/static/logo_small.png"
-#icon = "C:/Users/Celula1/app/static/icon.png"
-#img_header = "C:/Users/Celula1/app/static/eda_header.png"
+logo_path = "C:/Users/Celula1/app/static/logo_small.png"
+icon = "C:/Users/Celula1/app/static/icon.png"
+img_header = "C:/Users/Celula1/app/static/eda_header.png"
 #video_eda = "EDA_video.mp4"
 
 #   PLOOMBER
 logo_path = "static/logo_small.png"
 icon = "static/icon.png"
 img_header = "static/eda_header.png"
-video_eda = "EDA_video.mp4"
+#video_eda = "https://vimeo.com/1047182043"
+src = 'https://player.vimeo.com/video/1058312363'
+#video_eda = 'https://www.youtube.com/watch?v=GHoE4VkDehY&list=PLtqF5YXg7GLmCvTswG32NqQypOuYkPRUE&index=51'
 
 with st.sidebar:
     st.logo(image=logo_path, link='https://datlas.mx/', size='large', icon_image=logo_path)
@@ -21,13 +24,10 @@ with open('style.css') as f:
 
 st.image(img_header)
 #st.image("/srv/static/EDA & Forecast_bl.png")
+components.iframe(src, height=500)
+#st.video(video_eda, autoplay=True)
 
-#video_file = open(video_eda, "rb")
-#video_bytes = video_file.read()
-
-#st.video(video_bytes, autoplay=True)
-
-st.video("https://vimeo.com/1047182043", start_time=1)
+#st.video("https://youtu.be/_xOv22BBGi8?si=OiH8IlG8B0EqiB-H", start_time=1)
 
 im1 = "https://blogdatlas.wordpress.com/wp-content/uploads/2024/10/image-3.png?w=900"
 im2 = "https://blogdatlas.wordpress.com/wp-content/uploads/2024/06/banner-1.png?w=900"
