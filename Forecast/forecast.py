@@ -1,23 +1,17 @@
 import streamlit as st
 import pandas as pd 
 import plotly.express as px
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
 from statsforecast import StatsForecast
-from statsforecast.models import AutoARIMA,HoltWinters, ARIMA, AutoETS, AutoRegressive, AutoCES
+from statsforecast.models import AutoARIMA,HoltWinters, AutoETS, AutoRegressive, AutoCES
 import os
 from utilsforecast.losses import *
 from utilsforecast.evaluation import evaluate
 os.environ['NIXTLA_ID_AS_COL'] = '1'
 pd.options.display.max_columns = None
-from statsmodels.tsa.stattools import adfuller
-from statsmodels.tsa.seasonal import seasonal_decompose, STL, MSTL
+from statsmodels.tsa.seasonal import STL
 import numpy as np
 from scipy import stats
 import gc
-from functools import partial
-import statsmodels.api as sm
-
 
 # Ignore harmless warnings
 import warnings
@@ -104,7 +98,6 @@ def plot_components(result):
     #st.plotly_chart(qq_plot,use_container_width=True)
     #-------------------------------
 
-
 def identify_outliers(db, m):
     if(m == 'zscore'):
         z = np.abs(stats.zscore( db['y']))
@@ -134,7 +127,6 @@ def plot_forecast(db, pred,modelos):
     #fig.add_trace(px.line(pred, x="ds", y="AutoRegressive" , color_discrete_sequence=['gray']).data[0])
     
     def selector(column_name):
-        # just need to be careful that "column_name" is not any other string in "hovertemplate" data
         f = lambda x: True if column_name in x['hovertemplate'] else False
         return f
     for m in modelos:
@@ -150,16 +142,11 @@ def plot_forecast(db, pred,modelos):
     st.plotly_chart(fig,use_container_width=True)
 
 #   -----------------------------------------------------------------------
-#   LOCAL
-logo_path = "C:/Users/Celula1/app/static/logo_small.png"
-icon = "C:/Users/Celula1/app/static/icon.png"
-img_forecast = "C:\\Users\\Celula1\\app\\static\\dg_time_series2.png"
 
-#   PLOOMBER
-#logo_path = "static/logo_small.png"
-#icon = "static/icon.png"
-#img_forecast = "static/dg_time_series2.png"
-
+#   DOCKER
+logo_path = "static/logo_small.png"
+icon = "static/icon.png"
+img_forecast = "static/dg_time_series2.png"
 
 with st.sidebar:
     st.logo(image=logo_path, link='https://datlas.mx/', size='large', icon_image=logo_path)
@@ -167,34 +154,40 @@ with st.sidebar:
 with open('style.css') as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-
 st.header('Pasos para generar un pronóstico de series de tiempo')
 st.image(img_forecast, caption='En la imágen vemos los pasos que se deberían seguir para generar un pronóstico de series de tiempo, para este DEMO se omiten algunos.')
 
 st.header('Archivos ejemplo para pronósticos')
-_dataset1 = st.checkbox("Pasajeros de aerolinea", False)
-_dataset3 = st.checkbox("Ventas", False)
+#_aerolinea = st.checkbox("Pasajeros de aerolinea", False)
+#_ventas = st.checkbox("Ventas", False)
 
-if(_dataset1):  #   AEROLINEA
+dataset = st.radio(
+    "Selecciona un dataset de prueba",
+    ["Datos de aerolinea", "Datos de ventas"],
+    captions=[
+        "Datos de fechas de vuelos y cantidad de pasajeros",
+        "Datos de transacciones de diferentes productos",
+    ],
+)
+
+if(dataset  == 'Datos de aerolinea'):  #   AEROLINEA
     st.session_state['respaldo'] = read_file('Forecast/airline_passengers.csv')
     st.session_state['respaldo']['MONTH'] = pd.to_datetime(st.session_state['respaldo']['MONTH'])
     st.session_state['datos'] = st.session_state['respaldo']
     st.subheader('Visualización de datos')
     st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
     st.write(st.session_state['respaldo'])
-if(_dataset3):  #   VENTAS
+if(dataset == 'Datos de ventas'):  #   VENTAS
     st.session_state['respaldo'] = read_file('Forecast/sales_data_sample2.csv')
     st.session_state['datos'] = st.session_state['respaldo']
     st.subheader('Visualización de datos')
     st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
     st.write(st.session_state['respaldo'])
     
-gc.collect()
                  
 #   -----------------------------------------------------------------------
 #   FORECAST
-#if 'datos' in st.session_state:
-if(_dataset3):  #   VENTAS
+if(dataset == 'Datos de ventas'):  #   VENTAS
     df_forecast = st.session_state['respaldo']
     df_forecast = df_forecast[['PRODUCTO','CANTIDAD','FECHA']]
     df_forecast['mes'] = pd.to_datetime(df_forecast['FECHA']).dt.month
@@ -255,57 +248,11 @@ if(_dataset3):  #   VENTAS
     
     st.plotly_chart(fig,use_container_width=True)
 
-    st.subheader('Pronóstico')
-    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
-    st.markdown("""
-        El proceso de selección de un modelo de pronóstico para series de tiempo implica varias etapas clave, que incluyen el análisis de los datos, 
-        la identificación de patrones, la evaluación de diferentes modelos y la validación de los resultados.
-        Antes de seleccionar cualquier modelo, es importante analizar la serie de tiempo en detalle. Algunas preguntas clave a considerar son:
+if(dataset  == 'Datos de aerolinea'):
+    db = st.session_state['respaldo']
+    db.columns = ['unique_id','ds','y']
 
-        > - **Tendencia**: ¿Los datos muestran una dirección general a largo plazo, como un crecimiento o disminución constante?
-        > - **Estacionalidad:**: ¿Existen patrones que se repiten a intervalos regulares, como fluctuaciones anuales, mensuales o semanales?
-        > - **Ciclicidad**: ¿Los datos siguen ciclos irregulares que no son estrictamente estacionales?
-        > - **Ruido**: ¿Hay variabilidad o fluctuaciones aleatorias en los datos?
-        """)
-    season_l = 12
-    modelos = ['AutoARIMA','HoltWinters','AutoETS','CES','AutoRegressive']
-    m = st.selectbox('Selecciona un modelo: ',modelos, index=None, placeholder='Selecciona una opción')
-    if(m is not None):
-        if(m == 'AutoARIMA'):
-            models = [AutoARIMA(season_length=season_l)]
-        elif(m =='HoltWinters'):
-            models = [HoltWinters(season_length=season_l)]
-        elif(m =='AutoETS'):
-            models = [AutoETS(season_length=season_l)]
-        elif(m == 'CES'):
-            models = [AutoCES(season_length=season_l)]
-        else:
-            models = [AutoRegressive(lags=14)]
-
-
-        sf = StatsForecast(models=models, freq='M', n_jobs = -1)
-        p = sf.forecast(df= db[:-4], h= 4, fitted=True, level=[90])
-        p['y'] = list(db.tail(4)['y'])
-        st.write(p)
-        plot_forecast(db,p, [m])
-        
-        metrics = [mae,mse,rmse,mape,smape]
-        evaluation = evaluate(p, metrics=metrics)
-        st.markdown("""
-        Una vez seleccionados los modelos posibles, es necesario evaluarlos para determinar cuál proporciona las mejores predicciones. 
-        Esto se realiza utilizando una muestra de prueba o mediante técnicas de validación cruzada. Las métricas comunes para evaluar el rendimiento incluyen:
-                
-        > - **Error cuadrático medio (RMSE) o Error absoluto medio (MAE)**: Miden la magnitud del error entre las predicciones y los valores reales.
-        > - **El Error Porcentual Absoluto Medio (MAPE)**: Es una métrica que mide el error en términos relativos, es decir, expresa el error como un porcentaje de los valores reales.
-        > - **El Error Porcentual Absoluto Medio Simétrico (sMAPE)**: Es una variante del MAPE diseñada para ser más robusta, especialmente en situaciones donde los valores reales son cercanos a cero.
-        """)
-        st.write(evaluation)
-
-if(_dataset1):
-    df_forecast = st.session_state['respaldo']
-    df_forecast.columns = ['unique_id','ds','y']
-
-    stl = STL(df_forecast['y'], len(df_forecast['y']))
+    stl = STL(db['y'], len(db['y']))
     result = stl.fit()
     st.subheader('Descomposición de la serie')
     st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
@@ -337,12 +284,12 @@ if(_dataset1):
                 Los outliers pueden ser el resultado de errores en la recolección de datos, variabilidad natural, o incluso fenómenos interesantes 
                 que merecen ser investigados más a fondo.
         """)
-    o = identify_outliers(df_forecast, 'zscore')
+    o = identify_outliers(db, 'zscore')
     #o = identify_outliers(df_forecast, 'iqr')
     st.write(o)
 
     # Create line plot for titration curve
-    fig = px.line(df_forecast, x="ds", y='y', labels={'ds': 'time(ds)', 'y': 'target(y)'},height=350)
+    fig = px.line(db, x="ds", y='y', labels={'ds': 'time(ds)', 'y': 'target(y)'},height=350)
     fig.update_traces(line={'width': .8, 'color': '#657695'})
     fig.update_xaxes(tickangle=90, dtick="M1")
     fig.update_layout(plot_bgcolor='#ebeff6')
@@ -352,22 +299,25 @@ if(_dataset1):
     
     st.plotly_chart(fig,use_container_width=True)
 
+if((dataset == 'Datos de ventas') | (dataset  == 'Datos de aerolinea')):
     st.subheader('Pronóstico')
     st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
-
     st.markdown("""
         El proceso de selección de un modelo de pronóstico para series de tiempo implica varias etapas clave, que incluyen el análisis de los datos, 
         la identificación de patrones, la evaluación de diferentes modelos y la validación de los resultados.
         Antes de seleccionar cualquier modelo, es importante analizar la serie de tiempo en detalle. Algunas preguntas clave a considerar son:
 
-        > - **Tendencia**: ¿Los datos muestran una dirección general a largo plazo, como un crecimiento o disminución constante?.
-        > - **Estacionalidad:**: ¿Existen patrones que se repiten a intervalos regulares, como fluctuaciones anuales, mensuales o semanales?.
-        > - **Ciclicidad**: ¿Los datos siguen ciclos irregulares que no son estrictamente estacionales?.
-        > - **Ruido**: ¿Hay variabilidad o fluctuaciones aleatorias en los datos?.
+        > - **Tendencia**: ¿Los datos muestran una dirección general a largo plazo, como un crecimiento o disminución constante?
+        > - **Estacionalidad:**: ¿Existen patrones que se repiten a intervalos regulares, como fluctuaciones anuales, mensuales o semanales?
+        > - **Ciclicidad**: ¿Los datos siguen ciclos irregulares que no son estrictamente estacionales?
+        > - **Ruido**: ¿Hay variabilidad o fluctuaciones aleatorias en los datos?
         """)
-
     season_l = 12
-    modelos = ['AutoARIMA','HoltWinters','AutoETS','CES','AutoRegressive']
+    if(dataset  == 'Datos de aerolinea'):
+        modelos = ['AutoARIMA','HoltWinters','AutoETS','CES','AutoRegressive']
+    else:
+        modelos = ['AutoARIMA','AutoETS','CES','AutoRegressive']
+    
     m = st.selectbox('Selecciona un modelo: ',modelos, index=None, placeholder='Selecciona una opción')
     if(m is not None):
         if(m == 'AutoARIMA'):
@@ -381,15 +331,15 @@ if(_dataset1):
         else:
             models = [AutoRegressive(lags=14)]
 
+
         sf = StatsForecast(models=models, freq='M', n_jobs = -1)
-        p = sf.forecast(df= df_forecast[:-4], h= 4, fitted=True)
-        p['y'] = list(df_forecast.tail(4)['y'])
+        p = sf.forecast(df= db[:-4], h= 4, fitted=True, level=[90])
+        p['y'] = list(db.tail(4)['y'])
         st.write(p)
-        plot_forecast(df_forecast,p, [m])
+        plot_forecast(db,p, [m, m+'-lo-90', m+'-hi-90'])
         
         metrics = [mae,mse,rmse,mape,smape]
         evaluation = evaluate(p, metrics=metrics)
-
         st.markdown("""
         Una vez seleccionados los modelos posibles, es necesario evaluarlos para determinar cuál proporciona las mejores predicciones. 
         Esto se realiza utilizando una muestra de prueba o mediante técnicas de validación cruzada. Las métricas comunes para evaluar el rendimiento incluyen:
@@ -398,14 +348,10 @@ if(_dataset1):
         > - **El Error Porcentual Absoluto Medio (MAPE)**: Es una métrica que mide el error en términos relativos, es decir, expresa el error como un porcentaje de los valores reales.
         > - **El Error Porcentual Absoluto Medio Simétrico (sMAPE)**: Es una variante del MAPE diseñada para ser más robusta, especialmente en situaciones donde los valores reales son cercanos a cero.
         """)
-
         st.write(evaluation)
-
 
 #   -----------------------------------------------------------------------------------------------
     
-
-#   -----------------------------------------------------------------------------------------------
 if 'datos' in st.session_state:
     del st.session_state['datos']
 if 'respaldo' in st.session_state:
