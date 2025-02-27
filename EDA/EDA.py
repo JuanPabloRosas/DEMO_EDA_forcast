@@ -14,15 +14,10 @@ import gc
 import warnings
 warnings.filterwarnings("ignore")
 
-#   LOCAL
-logo_path = "C:/Users/Celula1/app/static/logo_small.png"
-icon = "C:/Users/Celula1/app/static/icon.png"
-img_eda = "C:\\Users\\Celula1\\app\\static\\EDA & Forecast_bl.png"
-
-#   PLOOMBER
-#logo_path = "static/logo_small.png"
-#icon = "static/icon.png"
-#img_eda = "static/EDA & Forecast_bl.png"
+#   DOCKER
+logo_path = "static/logo_small.png"
+icon = "static/icon.png"
+img_eda = "static/EDA & Forecast_bl.png"
 
 with st.sidebar:
     st.logo(image=logo_path, link='https://datlas.mx/', size='large', icon_image=logo_path)
@@ -132,9 +127,32 @@ st.markdown("""
 
 st.image(img_eda)
 
-st.write("Para usar el EDA es necesario cargar un archivo de datos tabular separado por comas y con encabezados, que sea :blue-background[**menor o igual a 200 Mb**].")
+st.write("Para usar el EDA puedes usar alguno de los dataset que tenemos para pruebas o cargar un archivo de datos tabular separado por comas y con encabezados, que sea :blue-background[**menor o igual a 200 Mb**].")
 
 st.header('Análisis exploratorio de datos')
+dataset = st.radio(
+    "Selecciona un dataset de prueba",
+    ["Datos de aerolinea", "Datos de ventas"],
+    captions=[
+        "Datos de fechas de vuelos y cantidad de pasajeros",
+        "Datos de transacciones de diferentes productos",
+    ], index=None
+)
+if(dataset  == 'Datos de aerolinea'):  #   AEROLINEA
+    st.session_state['respaldo'] = read_file('Forecast/airline_passengers.csv')
+    st.session_state['respaldo']['MONTH'] = pd.to_datetime(st.session_state['respaldo']['MONTH'])
+    st.session_state['datos'] = st.session_state['respaldo']
+    st.subheader('Visualización de datos')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+    st.write(st.session_state['respaldo'])
+if(dataset == 'Datos de ventas'):  #   VENTAS
+    st.session_state['respaldo'] = read_file('Forecast/sales_data_sample2.csv')
+    st.session_state['datos'] = st.session_state['respaldo']
+    st.subheader('Visualización de datos')
+    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+    st.write(st.session_state['respaldo'])
+
+
 _file = st.file_uploader("Carga un archivo separado por comas (.csv)", type="csv")
 if _file is not None:
     df = read_file(_file)
@@ -143,11 +161,10 @@ if _file is not None:
 else:
     df = pd.DataFrame()
 
-del df
-gc.collect()
 #   -----------------------------------------------------------------------
 #   ESTADISTICA BASICA
-if _file is not None:    
+if 'datos' in st.session_state:    
+#if _file is not None:    
     st.subheader('Visualización de Datos')
     st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)    
     st.write(st.session_state['datos'])
@@ -209,7 +226,7 @@ if _file is not None:
         operation_line = st.radio('Operación de agrupamiento', ['Sumar', 'Contar'], key='radio_line')
     if((x_line is not None) & (y_line is not None)):
         df_temp = st.session_state['datos'].groupby([x_line], as_index=False).sum()
-        fig = px.line(df_temp, x=x_line, y=y_line, title="Test line plot")
+        fig = px.line(df_temp, x=x_line, y=y_line, title="Line plot")
         st.plotly_chart(fig,use_container_width=True)
 #   ----------------------------------------------------------------------------------------------
     st.subheader('Gráfica de Correlación')
@@ -235,27 +252,24 @@ if _file is not None:
         operation_scatter = st.radio('Operación de agrupamiento', ['Sumar', 'Contar'], key='radio_scatter')
     if((x is not None) & (y is not None)):
         df_temp = st.session_state['datos'].groupby([x], as_index=False).sum()
-        fig = px.scatter(df_temp, x=x, y=y, title="Test scatter plot")
+        fig = px.scatter(df_temp, x=x, y=y, title="Scatter plot")
         st.plotly_chart(fig,use_container_width=True)
-    #   ----------------------------------------------------------------------------------------------
-    st.subheader('Análisis RFM')
-    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
-    col1, col2 = st.columns([1,1])
-    with col1:
-        fechas_compra = st.selectbox('Fechas de compra: ',st.session_state['datos'].columns, index=None)
-        clientes = st.selectbox('Clientes: ',st.session_state['datos'].columns, index=None)
-    with col2:
-        cantidad = st.selectbox('Cantidad de compra: ',st.session_state['datos'].columns, index=None)
-        costo = st.selectbox('Costos de compra: ',st.session_state['datos'].columns, index=None)
-        producto = st.selectbox('Productos: ',st.session_state['datos'].columns, index=None)
+    #   ------------------------------- ANALISIS RFM ---------------------------------------------------------------
     
-    if((fechas_compra is not None) & (clientes is not None) & (cantidad is not None) & (costo is not None) & (producto is not None)):
-        _rfm = rfm(st.session_state['datos'][[fechas_compra,clientes,cantidad,costo,producto]])
-        st.write(_rfm)
-    #   ----------------------------------------------------------------------------------------------
-
-    # st.subheader('Mapa')
-    # st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+    #st.subheader('Análisis RFM')
+    #st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
+    #col1, col2 = st.columns([1,1])
+    #with col1:
+    #    fechas_compra = st.selectbox('Fechas de compra: ',st.session_state['datos'].columns, index=None)
+    #    clientes = st.selectbox('Clientes: ',st.session_state['datos'].columns, index=None)
+    #with col2:
+    #    cantidad = st.selectbox('Cantidad de compra: ',st.session_state['datos'].columns, index=None)
+    #    costo = st.selectbox('Costos de compra: ',st.session_state['datos'].columns, index=None)
+    #    producto = st.selectbox('Productos: ',st.session_state['datos'].columns, index=None)
+    
+    #if((fechas_compra is not None) & (clientes is not None) & (cantidad is not None) & (costo is not None) & (producto is not None)):
+    #    _rfm = rfm(st.session_state['datos'][[fechas_compra,clientes,cantidad,costo,producto]])
+    #    st.write(_rfm)
     #   ----------------------------------------------------------------------------------------------
 
     del nan_
@@ -266,3 +280,5 @@ if _file is not None:
     del x
     gc.collect()
 
+del df
+gc.collect()
