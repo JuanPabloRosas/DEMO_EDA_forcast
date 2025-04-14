@@ -3,8 +3,6 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
-import os
-os.environ['NIXTLA_ID_AS_COL'] = '1'
 pd.options.display.max_columns = None
 import numpy as np
 from scipy import stats
@@ -132,35 +130,25 @@ st.write("Para usar el EDA puedes usar alguno de los dataset que tenemos para pr
 st.header('Análisis exploratorio de datos')
 dataset = st.radio(
     "Selecciona un dataset de prueba",
-    ["Datos de aerolinea", "Datos de ventas"],
+    ["Datos de aerolinea", "Datos de ventas", "Cargar un archivo"],
     captions=[
         "Datos de fechas de vuelos y cantidad de pasajeros",
         "Datos de transacciones de diferentes productos",
+        "Archivo csv menor a 200 mb",
     ], index=None
 )
 if(dataset  == 'Datos de aerolinea'):  #   AEROLINEA
     st.session_state['respaldo'] = read_file('Forecast/airline_passengers.csv')
     st.session_state['respaldo']['MONTH'] = pd.to_datetime(st.session_state['respaldo']['MONTH'])
     st.session_state['datos'] = st.session_state['respaldo']
-    st.subheader('Visualización de datos')
-    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
-    st.write(st.session_state['respaldo'])
-if(dataset == 'Datos de ventas'):  #   VENTAS
+elif(dataset == 'Datos de ventas'):  #   VENTAS
     st.session_state['respaldo'] = read_file('Forecast/sales_data_sample2.csv')
     st.session_state['datos'] = st.session_state['respaldo']
-    st.subheader('Visualización de datos')
-    st.markdown("""<hr style=" color: #E8AC13; border: 5px solid; display: inline-block; width: 50%; margin: auto;" /> """, unsafe_allow_html=True)
-    st.write(st.session_state['respaldo'])
-
-
-_file = st.file_uploader("Carga un archivo separado por comas (.csv)", type="csv")
-if _file is not None:
-    df = read_file(_file)
-    st.session_state['respaldo'] = df
-    st.session_state['datos'] = df
-else:
-    df = pd.DataFrame()
-
+elif(dataset =="Cargar un archivo"):
+    _file = st.file_uploader("Carga un archivo separado por comas (.csv)", type="csv")
+    if _file is not None:
+        st.session_state['respaldo'] = read_file(_file)
+        st.session_state['datos'] = st.session_state['respaldo']
 #   -----------------------------------------------------------------------
 #   ESTADISTICA BASICA
 if 'datos' in st.session_state:    
@@ -280,5 +268,4 @@ if 'datos' in st.session_state:
     del x
     gc.collect()
 
-del df
 gc.collect()
