@@ -190,8 +190,8 @@ if(dataset == 'Datos de ventas'):  #   VENTAS
 if(dataset == 'Datos de ventas'):  #   VENTAS
     df_forecast = st.session_state['respaldo']
     df_forecast = df_forecast[['PRODUCTO','CANTIDAD','FECHA']]
-    df_forecast['mes'] = pd.to_datetime(df_forecast['FECHA']).dt.month
-    df_forecast['year'] = pd.to_datetime(df_forecast['FECHA']).dt.year
+    df_forecast['mes'] = pd.to_datetime(df_forecast['FECHA'], dayfirst = True).dt.month
+    df_forecast['year'] = pd.to_datetime(df_forecast['FECHA'], dayfirst=True).dt.year
     df_forecast.columns = ['unique_id','y','ds','mes','year']
     
     df_forecast = df_forecast.groupby(['unique_id','mes','year'], as_index=False).sum()
